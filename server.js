@@ -5,7 +5,6 @@ const port = process.env.PORT || 3000;
 
 app.use(express.urlencoded({ extended: true }));
 
-// Warna untuk animasi di Termux
 const rainbow = ["\x1b[31m", "\x1b[33m", "\x1b[32m", "\x1b[36m", "\x1b[34m", "\x1b[35m"];
 const reset = "\x1b[0m";
 const bold = "\x1b[1m";
@@ -29,7 +28,20 @@ app.get('/', (req, res) => {
         label { font-size: 12px; color: #aaa; margin-left: 5px; display: block; margin-top: 10px; }
         input { width: 100%; padding: 12px; margin: 5px 0; border-radius: 10px; border: none; background: rgba(255,255,255,0.05); color: white; box-sizing: border-box; }
         button { width: 100%; padding: 15px; border-radius: 10px; border: none; background: linear-gradient(to right, #2ecc71, #27ae60); color: white; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .data-box { margin-top: 25px; background: rgba(0,0,0,0.5); color: #0f0; padding: 15px; border-radius: 10px; overflow-x: auto; white-space: pre; font-family: 'Courier New', monospace; font-size: 11px; border: 1px solid #444; }
+        
+        /* INI KUNCI AGAR TETAP RAPI DALAM TABEL */
+        .data-box { 
+            margin-top: 25px; 
+            background: rgba(0,0,0,0.5); 
+            color: #0f0; 
+            padding: 15px; 
+            border-radius: 10px; 
+            overflow-x: auto; 
+            font-family: 'Courier New', monospace; 
+            font-size: 11px; 
+            border: 1px solid #444;
+            white-space: pre; /* Mencegah teks turun ke bawah agar tabel tetap lurus */
+        }
     </style>
 </head>
 <body>
@@ -53,7 +65,7 @@ app.get('/', (req, res) => {
             <button type="submit">💾 SIMPAN DATA LENGKAP</button>
         </form>
         <h3 style="font-size:14px; margin-top:20px;">📋 Laporan Database:</h3>
-        <div class="data-box">${isiFile}</div>
+        <div class="data-box">\${isiFile}</div>
     </div>
 </body>
 </html>
@@ -62,7 +74,7 @@ app.get('/', (req, res) => {
 
 app.post('/tambah', (req, res) => {
     const d = req.body;
-    // Format baris agar lurus (Menggunakan .padEnd agar spasi terjaga)
+    // Mengatur spasi agar lurus seperti tabel Termux
     const baris = \`\${d.namaPeminjam.padEnd(12)} | \${d.judulBuku.padEnd(15)} | \${(d.nomorBuku || '').padEnd(6)} | \${(d.idBuku || '').padEnd(6)} | \${d.penerbit || ''}\\n\`;
     
     fs.appendFileSync('data_peminjaman.txt', baris);
@@ -70,10 +82,5 @@ app.post('/tambah', (req, res) => {
 });
 
 app.listen(port, () => {
-    let i = 0;
-    setInterval(() => {
-        const color = rainbow[i % rainbow.length];
-        process.stdout.write(\`\\r\${bold}\${color}✅ BERHASIL ALWAYS AZRIL SERVER IS RUNNING 🚀 | Port: \${port}\${reset}\`);
-        i++;
-    }, 200);
+    console.log("Server Running");
 });
