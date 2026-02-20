@@ -9,7 +9,7 @@ app.use(express.static(__dirname));
 
 const dataFile = path.resolve(__dirname, 'data_peminjaman.txt');
 
-// --- FUNGSI PENYELARAS KOLOM ---
+// --- LOGIKA PENYELARAS KOLOM ---
 const pad = (str, len) => {
     let s = (str || "").toString().toUpperCase();
     if (s.length > len) return s.substring(0, len);
@@ -24,7 +24,7 @@ const inisialisasiData = () => {
     }
 };
 
-// --- TEMPLATE UI (Sesuai Gambar: Judul Atas, Data Box, Tombol Tengah Bawah) ---
+// --- TEMPLATE UI (Sesuai Gambar: Full Width & Scrollable) ---
 const templateHasil = (judul, data) => `
     <!DOCTYPE html>
     <html lang="id">
@@ -49,6 +49,7 @@ const templateHasil = (judul, data) => `
                 text-align: center;
                 border-bottom: 2px solid #00d4ff;
                 margin-bottom: 20px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             }
             .header-blue h2 {
                 color: #00d4ff;
@@ -57,26 +58,25 @@ const templateHasil = (judul, data) => `
                 text-transform: uppercase;
                 letter-spacing: 2px;
             }
-            .db-box { 
-                width: 90%;
-                max-width: 950px;
-                background: #000; 
-                padding: 12px; 
-                border-radius: 8px; 
-                border: 1px solid #333; 
-                overflow-x: auto; 
-                text-align: left; 
+            /* Kontainer utama agar bisa di-scroll ke samping */
+            .scroll-container {
+                width: 95%;
+                max-width: 1000px;
+                overflow-x: auto; /* Kunci agar tidak terpotong */
+                background: #000;
+                border-radius: 10px;
+                border: 1px solid #333;
+                padding: 15px;
+                margin-bottom: 20px;
             }
             pre { 
                 color: #00ff00; 
                 font-family: 'Courier New', monospace; 
-                font-size: 11px; 
+                font-size: 12px; 
                 margin: 0; 
-                white-space: pre; 
-                line-height: 1.5;
-            }
-            .btn-back-container {
-                margin: 20px 0;
+                white-space: pre; /* Menjaga spasi tetap utuh */
+                line-height: 1.6;
+                min-width: 850px; /* Memaksa teks memanjang agar semua kolom terlihat */
             }
             .btn-back { 
                 color: #aaa; 
@@ -84,8 +84,14 @@ const templateHasil = (judul, data) => `
                 font-size: 12px; 
                 font-weight: bold;
                 text-transform: uppercase;
+                margin-bottom: 30px;
+                border-bottom: 1px solid transparent;
+                transition: 0.3s;
             }
-            .btn-back:hover { color: white; }
+            .btn-back:hover { 
+                color: #00d4ff; 
+                border-bottom: 1px solid #00d4ff;
+            }
         </style>
     </head>
     <body>
@@ -93,13 +99,11 @@ const templateHasil = (judul, data) => `
             <h2>🔍 ${judul}</h2>
         </div>
         
-        <div class="db-box">
+        <div class="scroll-container">
             <pre>${data}</pre>
         </div>
 
-        <div class="btn-back-container">
-            <a href="/" class="btn-back">← KEMBALI</a>
-        </div>
+        <a href="/" class="btn-back">← KEMBALI</a>
     </body>
     </html>
 `;
@@ -115,6 +119,7 @@ app.get('/cek-data', (req, res) => {
     res.send(templateHasil("DATABASE PEMINJAMAN", content));
 });
 
+// Preview data mentah untuk di bawah form index.html
 app.get('/data-raw', (req, res) => {
     inisialisasiData();
     res.setHeader('Content-Type', 'text/plain');
@@ -140,4 +145,4 @@ app.get('/cari', (req, res) => {
     res.send(templateHasil("HASIL PENCARIAN", hasilFinal));
 });
 
-app.listen(port, "0.0.0.0", () => console.log(`Server ON` ));
+app.listen(port, "0.0.0.0", () => console.log(`Server Aktif`));
