@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Input Perpustakaan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Pinjam Buku Sekolah</h2>
+        <form action="/tambah" method="POST">
+            <input type="text" name="namaPeminjam" placeholder="Nama Peminjam" required>
+            <input type="text" name="judulBuku" placeholder="Judul Buku" required>
+            <input type="text" name="nomorBuku" placeholder="Nomor Buku">
+            <button type="submit">Simpan Data</button>
+        </form>
+    </div>
+</body>
+</html>
