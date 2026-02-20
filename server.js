@@ -5,7 +5,7 @@ const port = process.env.PORT || 3000;
 
 app.use(express.urlencoded({ extended: true }));
 
-// Halaman Utama - Tampilan Tetap Sama
+// Tampilan Utama Tetap Sama Seperti Fotomu
 app.get('/', (req, res) => {
     res.send(`
 <!DOCTYPE html>
@@ -43,33 +43,35 @@ app.get('/', (req, res) => {
     `);
 });
 
-// Halaman Cek Data
+// Halaman Lihat Data
 app.get('/cek-data', (req, res) => {
-    let content = "Belum ada data.";
+    let log = "Belum ada data di server.";
     if (fs.existsSync('data_peminjaman.txt')) {
-        content = fs.readFileSync('data_peminjaman.txt', 'utf8');
+        log = fs.readFileSync('data_peminjaman.txt', 'utf8');
     }
     res.send(`
         <body style="background:#1a1a2f;color:#00ff00;padding:15px;font-family:monospace;">
-            <pre style="white-space:pre; font-size:10px;">\${content}</pre>
+            <pre style="white-space:pre; font-size:10px;">\${log}</pre>
             <hr style="border:0.5px solid #333; margin:20px 0;">
             <div style="display:flex; gap:10px;">
                 <a href="/" style="color:white; text-decoration:none; background:#444; padding:10px; border-radius:5px; font-family:sans-serif;">⬅ KEMBALI</a>
-                <form action="/hapus-semua" method="POST" onsubmit="return confirm('Hapus semua data?')">
-                    <button type="submit" style="background:#e74c3c; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">🗑️ HAPUS DATA</button>
+                <form action="/hapus-data" method="POST">
+                    <button type="submit" style="background:#e74c3c; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">🗑️ HAPUS SEMUA</button>
                 </form>
             </div>
         </body>
     `);
 });
 
-// Fitur Hapus
-app.post('/hapus-semua', (req, res) => {
-    if (fs.existsSync('data_peminjaman.txt')) { fs.unlinkSync('data_peminjaman.txt'); }
+// Fitur Hapus Data
+app.post('/hapus-data', (req, res) => {
+    if (fs.existsSync('data_peminjaman.txt')) {
+        fs.unlinkSync('data_peminjaman.txt');
+    }
     res.redirect('/cek-data');
 });
 
-// Fitur Tambah Data
+// Fitur Simpan Data (Lurus & Rapi)
 app.post('/tambah', (req, res) => {
     const d = req.body;
     if (!fs.existsSync('data_peminjaman.txt')) {
@@ -77,9 +79,10 @@ app.post('/tambah', (req, res) => {
                   "--------------------------------------------------------------------------------------------\\n";
         fs.writeFileSync('data_peminjaman.txt', h);
     }
+    // Menggunakan Backtick agar tidak crash
     const b = \`\${(d.namaPeminjam || '').padEnd(14)} | \${(d.judulBuku || '').padEnd(20)} | \${(d.nomorBuku || '').padEnd(8)} | \${(d.idBuku || '').padEnd(7)} | \${(d.penerbit || '').padEnd(10)} | \${(d.tahunTerbit || '').padEnd(9)} | \${d.kurikulum || ''}\\n\`;
     fs.appendFileSync('data_peminjaman.txt', b);
     res.redirect('/cek-data');
 });
 
-app.listen(port, "0.0.0.0", () => { console.log("Server ON"); });
+app.listen(port, "0.0.0.0", () => { console.log("Server Online"); });
