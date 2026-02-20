@@ -1,5 +1,5 @@
 const express = require('express');
-const fs = require('fs');
+const fs = require('fs'); // Sudah diperbaiki dari 'fa' ke 'fs'
 const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -9,6 +9,7 @@ app.use(express.static(__dirname));
 
 const dataFile = path.resolve(__dirname, 'data_peminjaman.txt');
 
+// Inisialisasi Database
 const inisialisasiData = () => {
     if (!fs.existsSync(dataFile)) {
         const header = "PEMINJAM       | JUDUL BUKU           | NO. BUKU   | ID BUKU | PENERBIT   | TAHUN     | KURIKULUM\n" +
@@ -22,19 +23,19 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// FITUR AMBIL DATA (Untuk tabel di index.html)
+// AMBIL DATA UNTUK DITAMPILKAN DI TABEL
 app.get('/data', (req, res) => {
     inisialisasiData();
     const content = fs.readFileSync(dataFile, 'utf8');
     res.send(content);
 });
 
-// FITUR SIMPAN (Sudah disesuaikan dengan index.html Anda)
+// FITUR TAMBAH DATA (Sudah sinkron dengan index.html)
 app.post('/pinjam', (req, res) => {
     inisialisasiData();
     const d = req.body;
     
-    // Mengambil data sesuai atribut 'name' di index.html
+    // Format padding agar kolom lurus rapi
     const nama = (d.nama || '').toUpperCase().substring(0, 14).padEnd(14);
     const buku = (d.buku || '').toUpperCase().substring(0, 20).padEnd(20);
     const no   = (d.no_buku || '').substring(0, 10).padEnd(10);
@@ -48,7 +49,7 @@ app.post('/pinjam', (req, res) => {
     res.redirect('/');
 });
 
-// FITUR CARI (Mempertahankan fitur lama Anda)
+// FITUR CARI DATA
 app.get('/cari', (req, res) => {
     const query = (req.query.q || '').toUpperCase();
     inisialisasiData();
@@ -61,7 +62,7 @@ app.get('/cari', (req, res) => {
     res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:20px; font-family:monospace;">
         <h3>Hasil Pencarian: "${query}"</h3>
         <pre>${hasil}</pre>
-        <hr><a href="/" style="color:white;">Kembali</a>
+        <hr><a href="/" style="color:white; text-decoration:none; background:#444; padding:10px; border-radius:5px;">🔙 KEMBALI</a>
     </body>`);
 });
 
@@ -69,7 +70,9 @@ app.get('/cari', (req, res) => {
 app.get('/cek-data', (req, res) => {
     inisialisasiData();
     const log = fs.readFileSync(dataFile, 'utf8');
-    res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:15px; font-family:monospace;"><pre>${log}</pre><hr><a href="/" style="color:white;">Kembali</a></body>`);
+    res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:15px; font-family:monospace;"><pre>${log}</pre><hr><a href="/" style="color:white; text-decoration:none; background:#444; padding:10px; border-radius:5px;">🔙 KEMBALI</a></body>`);
 });
 
-app.listen(port, "0.0.0.0", () => console.log("Server Aktif!"));
+app.listen(port, "0.0.0.0", () => {
+    console.log("Server aktif di port " + port);
+});
