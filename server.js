@@ -1,78 +1,105 @@
 const express = require('express');
-const fs = require('fs'); [span_2](start_span)// SUDAH DIPERBAIKI: tadinya 'fa' menjadi 'fs'[span_2](end_span)
+const fs = require('fs');
 const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 const dataFile = path.resolve(__dirname, 'data_peminjaman.txt');
 
-[span_3](start_span)// Inisialisasi Database agar kolom rapi[span_3](end_span)
+// Inisialisasi file agar tidak error saat dibaca pertama kali
 const inisialisasiData = () => {
-    if (!fs.existsSync(dataFile)) {
-        const header = "PEMINJAM       | JUDUL BUKU           | NO. BUKU   | ID BUKU | PENERBIT   | TAHUN     | KURIKULUM\n" +
-                       "----------------------------------------------------------------------------------------------------\n";
-        fs.writeFileSync(dataFile, header, 'utf8');
+    try {
+        if (!fs.existsSync(dataFile)) {
+            const header = "PEMINJAM       | JUDUL BUKU           | NO. BUKU   | ID BUKU | PENERBIT   | TAHUN     | KURIKULUM\n" +
+                           "----------------------------------------------------------------------------------------------------\n";
+            fs.writeFileSync(dataFile, header, 'utf8');
+        }
+    } catch (err) {
+        console.error("Gagal inisialisasi file:", err.message);
     }
 };
 
-// --- HALAMAN UTAMA ---
+// HALAMAN UTAMA
 app.get('/', (req, res) => {
-    [span_4](start_span)res.sendFile(path.join(__dirname, 'index.html')); // Mengirim file index.html[span_4](end_span)
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// --- AMBIL DATA (Untuk tabel di index.html) ---
+// FITUR AMBIL DATA
 app.get('/data', (req, res) => {
-    inisialisasiData();
-    const content = fs.readFileSync(dataFile, 'utf8');
-    [span_5](start_span)res.send(content); // Mengirim isi teks database[span_5](end_span)
+    try {
+        inisialisasiData();
+        if (fs.existsSync(dataFile)) {
+            const content = fs.readFileSync(dataFile, 'utf8');
+            res.send(content);
+        } else {
+            res.send("Database belum siap.");
+        }
+    } catch (err) {
+        res.status(500).send("Error membaca database: " + err.message);
+    }
 });
 
-// --- SIMPAN DATA (Sinkron dengan index.html) ---
+// FITUR SIMPAN (Dengan penanganan error agar tidak CRASH)
 app.post('/pinjam', (req, res) => {
-    inisialisasiData();
-    const d = req.body;
-    
-    [span_6](start_span)// Padding agar kolom tetap lurus sejajar[span_6](end_span)
-    const nama = (d.nama || '').toUpperCase().substring(0, 14).padEnd(14);
-    const buku = (d.buku || '').toUpperCase().substring(0, 20).padEnd(20);
-    const no   = (d.no_buku || '').substring(0, 10).padEnd(10);
-    const id   = (d.id_buku || '').substring(0, 7).padEnd(7);
-    const pen  = (d.penerbit || '').toUpperCase().substring(0, 10).padEnd(10);
-    const thn  = (d.tahun || '').substring(0, 9).padEnd(9);
-    const kur  = (d.kurikulum || '').toUpperCase();
+    try {
+        inisialisasiData();
+        const d = req.body;
+        
+        [span_1](start_span)// Formatting data (tetap mempertahankan logika lama Anda)[span_1](end_span)
+        const nama = (d.nama || '').toUpperCase().substring(0, 14).padEnd(14);
+        const buku = (d.buku || '').toUpperCase().substring(0, 20).padEnd(20);
+        const no   = (d.no_buku || '').substring(0, 10).padEnd(10);
+        const id   = (d.id_buku || '').substring(0, 7).padEnd(7);
+        const pen  = (d.penerbit || '').toUpperCase().substring(0, 10).padEnd(10);
+        const thn  = (d.tahun || '').substring(0, 9).padEnd(9);
+        const kur  = (d.kurikulum || '').toUpperCase();
 
-    const baris = `${nama} | ${buku} | ${no} | ${id} | ${pen} | ${thn} | ${kur}\n`;
-    fs.appendFileSync(dataFile, baris);
-    res.redirect('/');
+        const baris = `${nama} | ${buku} | ${no} | ${id} | ${pen} | ${thn} | ${kur}\n`;
+        
+        fs.appendFileSync(dataFile, baris);
+        res.redirect('/');
+    } catch (err) {
+        console.error("Gagal simpan data:", err.message);
+        res.status(500).send("Gagal menyimpan data. Pastikan izin akses file tersedia.");
+    }
 });
 
-// --- FITUR CARI (Mempertahankan fitur lama) ---
+// FITUR CARI
 app.get('/cari', (req, res) => {
-    const query = (req.query.q || '').toUpperCase();
-    inisialisasiData();
-    const content = fs.readFileSync(dataFile, 'utf8');
-    const lines = content.split('\n');
-    const header = lines.slice(0, 2).join('\n');
-    const results = lines.slice(2).filter(l => l.includes(query) && l.trim() !== "");
-    const hasil = results.length > 0 ? header + "\n" + results.join('\n') : "Data tidak ditemukan.";
-    
-    res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:20px; font-family:monospace;">
-        <h3>Hasil Pencarian: "${query}"</h3>
-        <pre>${hasil}</pre>
-        <hr><a href="/" style="color:white; text-decoration:none; background:#444; padding:10px; border-radius:5px;">🔙 KEMBALI</a>
-    </body>`);
+    try {
+        const query = (req.query.q || '').toUpperCase();
+        inisialisasiData();
+        const content = fs.readFileSync(dataFile, 'utf8');
+        const lines = content.split('\n');
+        const header = lines.slice(0, 2).join('\n');
+        const results = lines.slice(2).filter(l => l.includes(query) && l.trim() !== "");
+        const hasil = results.length > 0 ? header + "\n" + results.join('\n') : "Data tidak ditemukan.";
+        
+        res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:20px; font-family:monospace;">
+            <h3>Hasil Pencarian: "${query}"</h3>
+            <pre>${hasil}</pre>
+            <hr><a href="/" style="color:white;">Kembali</a>
+        </body>`);
+    } catch (err) {
+        res.status(500).send("Error saat mencari data.");
+    }
 });
 
-// --- FITUR CEK DATA FULL ---
+// FITUR CEK DATA FULL
 app.get('/cek-data', (req, res) => {
-    inisialisasiData();
-    const log = fs.readFileSync(dataFile, 'utf8');
-    res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:15px; font-family:monospace;"><pre>${log}</pre><hr><a href="/" style="color:white; text-decoration:none; background:#444; padding:10px; border-radius:5px;">🔙 KEMBALI</a></body>`);
+    try {
+        inisialisasiData();
+        const log = fs.readFileSync(dataFile, 'utf8');
+        res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:15px; font-family:monospace;"><pre>${log}</pre><hr><a href="/" style="color:white;">Kembali</a></body>`);
+    } catch (err) {
+        res.status(500).send("Gagal memuat log.");
+    }
 });
 
 app.listen(port, "0.0.0.0", () => {
-    console.log("Server Perpus Online Aktif di Port " + port);
+    console.log(`Server Aktif di port ${port}`);
 });
