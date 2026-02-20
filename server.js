@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
         </head>
         <body>
             <div class="container">
-                <h2>🚀 AZRIL PERPUS SYSTEM</h2>
+                <h2>📚 INPUT DATA PEMINJAMAN BUKU</h2>
                 <form action="/tambah" method="POST">
                     <label>Nama Peminjam</label>
                     <input type="text" name="namaPeminjam" required>
