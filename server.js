@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
     `);
 });
 
-// Halaman Lihat Data dengan Tabel Lurus
+// Halaman Lihat Data
 app.get('/cek-data', (req, res) => {
     let log = "Belum ada data.";
     if (fs.existsSync('data_peminjaman.txt')) {
@@ -50,7 +50,7 @@ app.get('/cek-data', (req, res) => {
     }
     res.send(`
         <body style="background:#1a1a2f; color:#00ff00; padding:15px; font-family:monospace;">
-            <pre style="white-space:pre; font-size:10px;">${log}</pre>
+            <pre style="white-space:pre; font-size:9px; letter-spacing: 1px;">${log}</pre>
             <hr style="border:0.5px solid #333; margin:20px 0;">
             <div style="display:flex; gap:10px;">
                 <a href="/" style="color:white; text-decoration:none; background:#444; padding:10px; border-radius:5px; font-family:sans-serif;">⬅ KEMBALI</a>
@@ -67,19 +67,19 @@ app.post('/hapus-semua', (req, res) => {
     res.redirect('/cek-data');
 });
 
-// Logika penyesuaian kolom agar sejajar
+// Penyesuaian Spasi Kolom
 app.post('/tambah', (req, res) => {
     const d = req.body;
     if (!fs.existsSync('data_peminjaman.txt')) {
-        const h = "PEMINJAM       | JUDUL BUKU           | NO. BUKU | ID BUKU | PENERBIT   | TAHUN     | KURIKULUM\n" +
-                  "--------------------------------------------------------------------------------------------\n";
+        const h = "PEMINJAM       | JUDUL BUKU           | NO. BUKU   | ID BUKU | PENERBIT   | TAHUN     | KURIKULUM\n" +
+                  "----------------------------------------------------------------------------------------------------\n";
         fs.writeFileSync('data_peminjaman.txt', h);
     }
     
-    // Angka di padEnd harus sama dengan lebar judul di atas agar lurus
+    // Angka padEnd disesuaikan persis dengan jumlah karakter judul
     const baris = (d.namaPeminjam || '').toUpperCase().padEnd(14) + " | " + 
                   (d.judulBuku || '').toUpperCase().padEnd(20) + " | " + 
-                  (d.nomorBuku || '').padEnd(8) + " | " + 
+                  (d.nomorBuku || '').padEnd(10) + " | " + 
                   (d.idBuku || '').padEnd(7) + " | " + 
                   (d.penerbit || '').toUpperCase().padEnd(10) + " | " + 
                   (d.tahunTerbit || '').padEnd(9) + " | " + 
