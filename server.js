@@ -7,8 +7,7 @@ const port = process.env.PORT || 3000;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
-// Menggunakan path.join agar lokasi file absolut dan aman di server Railway
-const dataFile = path.join(__dirname, 'data_peminjaman.txt');
+const dataFile = path.resolve(__dirname, 'data_peminjaman.txt');
 
 const inisialisasiData = () => {
     if (!fs.existsSync(dataFile)) {
@@ -23,7 +22,12 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// FITUR AMBIL DATA (Untuk tabel di index.html)
+// HALAMAN KHUSUS CARI (Tampilan input putih + tombol biru)
+app.get('/halaman-cari', (req, res) => {
+    res.sendFile(path.join(__dirname, 'cari.html'));
+});
+
+// FITUR AMBIL DATA
 app.get('/data', (req, res) => {
     inisialisasiData();
     const content = fs.readFileSync(dataFile, 'utf8');
@@ -34,8 +38,6 @@ app.get('/data', (req, res) => {
 app.post('/pinjam', (req, res) => {
     inisialisasiData();
     const d = req.body;
-    
-    // Mengambil data sesuai atribut 'name' di index.html
     const nama = (d.nama || '').toUpperCase().substring(0, 14).padEnd(14);
     const buku = (d.buku || '').toUpperCase().substring(0, 20).padEnd(20);
     const no   = (d.no_buku || '').substring(0, 10).padEnd(10);
@@ -49,7 +51,7 @@ app.post('/pinjam', (req, res) => {
     res.redirect('/');
 });
 
-// FITUR CARI
+// FITUR PROSES CARI
 app.get('/cari', (req, res) => {
     const query = (req.query.q || '').toUpperCase();
     inisialisasiData();
@@ -59,18 +61,21 @@ app.get('/cari', (req, res) => {
     const results = lines.slice(2).filter(l => l.includes(query) && l.trim() !== "");
     const hasil = results.length > 0 ? header + "\n" + results.join('\n') : "Data tidak ditemukan.";
     
-    res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:20px; font-family:monospace;">
-        <h3>Hasil Pencarian: "${query}"</h3>
-        <pre>${hasil}</pre>
-        <hr><a href="/" style="color:white;">Kembali</a>
-    </body>`);
+    res.send(`
+        <body style="background:#1a1a2f; color:white; font-family:sans-serif; padding:20px; display:flex; justify-content:center;">
+            <div style="width:100%; max-width:400px; text-align:center;">
+                <h2 style="color:#00d4ff;">🔍 CARI DATA</h2>
+                <form action="/cari" method="GET">
+                    <input type="text" name="q" value="${query}" style="width:100%; padding:12px; border-radius:8px; border:none; margin-bottom:10px;">
+                    <button type="submit" style="width:100%; padding:12px; background:#00d4ff; color:white; border:none; border-radius:8px; font-weight:bold;">CARI SEKARANG</button>
+                </form>
+                <div style="margin-top:20px; background:#000; padding:10px; border-radius:10px; text-align:left; overflow-x:auto; border:1px solid #333;">
+                    <pre style="color:#00ff00; font-family:monospace; font-size:10px; margin:0;">${hasil}</pre>
+                </div>
+                <a href="/" style="display:block; margin-top:20px; color:#aaa; text-decoration:none;">← KEMBALI</a>
+            </div>
+        </body>
+    `);
 });
 
-// FITUR CEK DATA FULL
-app.get('/cek-data', (req, res) => {
-    inisialisasiData();
-    const log = fs.readFileSync(dataFile, 'utf8');
-    res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:15px; font-family:monospace;"><pre>${log}</pre><hr><a href="/" style="color:white;">Kembali</a></body>`);
-});
-
-app.listen(port, "0.0.0.0", () => console.log("Server Aktif!"));
+app.listen(port, "0.0.0.0", () => console.log(`Server nyala di port ${port}`));
