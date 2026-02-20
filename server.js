@@ -6,10 +6,17 @@ const port = process.env.PORT || 3000;
 
 app.use(express.urlencoded({ extended: true }));
 
-// Path file data yang aman untuk semua lingkungan
+// Menggunakan path absolute agar sistem cloud tidak bingung
 const dataFile = path.join(__dirname, 'data_peminjaman.txt');
 
-// --- HALAMAN UTAMA ---
+// Fungsi pembantu untuk memastikan file data selalu ada
+const inisialisasiFile = () => {
+    if (!fs.existsSync(dataFile)) {
+        const h = "PEMINJAM       | JUDUL BUKU           | NO. BUKU   | ID BUKU | PENERBIT   | TAHUN     | KURIKULUM\n----------------------------------------------------------------------------------------------------\n";
+        fs.writeFileSync(dataFile, h);
+    }
+};
+
 app.get('/', (req, res) => {
     res.send(`
 <!DOCTYPE html>
@@ -46,52 +53,35 @@ app.get('/', (req, res) => {
         </div>
     </div>
 </body>
-</html>
-    `);
+</html>`);
 });
 
-// --- FITUR PENCARIAN ---
 app.get('/cari', (req, res) => {
     const query = (req.query.q || '').toUpperCase();
-    let hasil = "Data tidak ditemukan.";
-    if (fs.existsSync(dataFile)) {
-        const content = fs.readFileSync(dataFile, 'utf8');
-        const lines = content.split('\n');
-        const header = lines.slice(0, 2).join('\n');
-        const matches = lines.slice(2).filter(l => l.includes(query) && l.trim() !== "");
-        if (matches.length > 0) hasil = header + "\n" + matches.join('\n');
-    }
-    res.send(`<body style="background:#1a1a2f; color:white; padding:20px; font-family:sans-serif;"><div style="max-width:400px; margin:auto;"><h2 style="color:#00c6ff; text-align:center;">🔍 CARI DATA</h2><form action="/cari" method="GET"><input type="text" name="q" placeholder="Cari..." style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;"><button style="width:100%; background:#00c6ff; border:none; padding:10px; color:white;">CARI</button></form><pre style="background:#000; color:#00ff00; padding:10px; margin-top:20px; font-size:9px; overflow:auto;">${hasil}</pre><a href="/" style="display:block; text-align:center; color:#aaa; margin-top:20px;">⬅ KEMBALI</a></div></body>`);
+    inisialisasiFile();
+    const lines = fs.readFileSync(dataFile, 'utf8').split('\n');
+    const header = lines.slice(0, 2).join('\n');
+    const matches = lines.slice(2).filter(l => l.includes(query) && l.trim() !== "");
+    let hasil = matches.length > 0 ? header + "\n" + matches.join('\n') : "Data tidak ditemukan.";
+    res.send(`<body style="background:#1a1a2f; color:white; padding:20px;"><div style="max-width:400px; margin:auto;"><h2 style="color:#00c6ff;">🔍 CARI</h2><form action="/cari" method="GET"><input type="text" name="q" placeholder="Cari..." style="width:100%; padding:10px;"><button style="width:100%; background:#00c6ff; border:none; padding:10px; color:white; margin-top:5px;">CARI</button></form><pre style="background:#000; color:#00ff00; padding:10px; margin-top:20px; font-size:9px; overflow:auto;">${hasil}</pre><a href="/" style="display:block; text-align:center; color:#aaa; margin-top:20px;">⬅ KEMBALI</a></div></body>`);
 });
 
-// --- LIHAT DATA ---
 app.get('/cek-data', (req, res) => {
-    let log = "Belum ada data.";
-    if (fs.existsSync(dataFile)) log = fs.readFileSync(dataFile, 'utf8');
-    res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:15px; font-family:monospace;"><pre style="font-size:9px;">${log}</pre><hr><a href="/" style="color:white; text-decoration:none; background:#444; padding:10px; border-radius:5px;">⬅ KEMBALI</a></body>`);
+    inisialisasiFile();
+    const log = fs.readFileSync(dataFile, 'utf8');
+    res.send(`<body style="background:#1a1a2f; color:#00ff00; padding:15px;"><pre style="font-size:9px;">${log}</pre><hr><a href="/" style="color:white; text-decoration:none; background:#444; padding:10px; border-radius:5px;">⬅ KEMBALI</a></body>`);
 });
 
-// --- TAMBAH DATA ---
 app.post('/tambah', (req, res) => {
+    inisialisasiFile();
     const d = req.body;
-    if (!fs.existsSync(dataFile)) {
-        const h = "PEMINJAM       | JUDUL BUKU           | NO. BUKU   | ID BUKU | PENERBIT   | TAHUN     | KURIKULUM\n----------------------------------------------------------------------------------------------------\n";
-        fs.writeFileSync(dataFile, h);
-    }
     const baris = (d.namaPeminjam || '').toUpperCase().padEnd(14) + " | " + (d.judulBuku || '').toUpperCase().padEnd(20) + " | " + (d.nomorBuku || '').padEnd(10) + " | " + (d.idBuku || '').padEnd(7) + " | " + (d.penerbit || '').toUpperCase().padEnd(10) + " | " + (d.tahunTerbit || '').padEnd(9) + " | " + (d.kurikulum || '').toUpperCase() + "\n";
     fs.appendFileSync(dataFile, baris);
     res.redirect('/cek-data');
 });
 
-// --- TAMPILAN TERMINAL STATIS (AMAN UNTUK WEB) ---
 app.listen(port, "0.0.0.0", () => {
-    const cyan = "\x1b[36m", green = "\x1b[32m", white = "\x1b[37m", reset = "\x1b[0m";
-    
-    // Tampilan ini hanya muncul sekali saat start, tidak akan membuat Railway error
-    console.log(`\n${cyan}┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓${reset}`);
-    console.log(`${cyan}┃${reset}  ${green}✨ SERVER AZRIL PERPUS BERHASIL DIJALANKAN ✨${reset}      ${cyan}┃${reset}`);
-    console.log(`${cyan}┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫${reset}`);
-    console.log(`${cyan}┃${reset}  🚀 Port   : ${white}${port}${reset}                                     ${cyan}┃${reset}`);
-    console.log(`${cyan}┃${reset}  🌍 Status : ${green}Online & Active${reset}                          ${cyan}┃${reset}`);
-    console.log(`${cyan}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛${reset}\n`);
+    console.log(`\x1b[36m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\x1b[0m`);
+    console.log(`\x1b[36m┃\x1b[0m  \x1b[32m✨ SERVER AZRIL PERPUS AKTIF ✨\x1b[0m                      \x1b[36m┃\x1b[0m`);
+    console.log(`\x1b[36m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\x1b[0m`);
 });
