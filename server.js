@@ -6,7 +6,7 @@ const port = process.env.PORT || 3000;
 
 app.use(express.urlencoded({ extended: true }));
 
-// Menentukan lokasi file agar tidak error di Railway
+// Path file data yang aman untuk semua lingkungan
 const dataFile = path.join(__dirname, 'data_peminjaman.txt');
 
 // --- HALAMAN UTAMA ---
@@ -83,31 +83,15 @@ app.post('/tambah', (req, res) => {
     res.redirect('/cek-data');
 });
 
-// --- ANIMASI TERMINAL (DIPERTAHANKAN UNTUK TERMUX) ---
-const rainbowColors = ["\x1b[38;2;255;0;0m", "\x1b[38;2;255;165;0m", "\x1b[38;2;255;255;0m", "\x1b[38;2;0;255;0m", "\x1b[38;2;0;255;255m", "\x1b[38;2;0;191;255m", "\x1b[38;2;255;0;255m"];
-let colorIdx = 0;
-
-function updateTerminal() {
-    // Jika berjalan di Railway, stop animasi agar tidak error
-    if (process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PROJECT_ID) return;
-
-    const cyan = "\x1b[38;2;0;255;255m", white = "\x1b[1m\x1b[38;2;255;255;255m", reset = "\x1b[0m", glow = rainbowColors[colorIdx];
-    process.stdout.write('\x1Bc');
-    console.log(`${cyan}┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓${reset}`);
-    console.log(`${cyan}┃${reset}  ${glow}✨ SERVER IS RUNNING ALWAYS AZRIL ✨${reset}               ${cyan}┃${reset}`);
-    console.log(`${cyan}┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫${reset}`);
-    console.log(`${cyan}┃${reset}  ${white}🚀 Status  :${reset} ${glow}Online & Active${reset}                   ${cyan}┃${reset}`);
-    console.log(`${cyan}┃${reset}  ${white}🌍 Link    :${reset} ${cyan}http://localhost:${port}${reset}          ${cyan}┃${reset}`);
-    console.log(`${cyan}┃${reset}  ${white}📱 Browser :${reset} ${white}Chrome / Samsung Internet${reset}        ${cyan}┃${reset}`);
-    console.log(`${cyan}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛${reset}`);
-    colorIdx = (colorIdx + 1) % rainbowColors.length;
-}
-
+// --- TAMPILAN TERMINAL STATIS (AMAN UNTUK WEB) ---
 app.listen(port, "0.0.0.0", () => {
-    // Jalankan animasi HANYA jika bukan di Railway (berarti di Termux)
-    if (!process.env.RAILWAY_STATIC_URL && !process.env.RAILWAY_PROJECT_ID) {
-        setInterval(updateTerminal, 500);
-    } else {
-        console.log("Server Aktif di Railway!");
-    }
+    const cyan = "\x1b[36m", green = "\x1b[32m", white = "\x1b[37m", reset = "\x1b[0m";
+    
+    // Tampilan ini hanya muncul sekali saat start, tidak akan membuat Railway error
+    console.log(`\n${cyan}┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓${reset}`);
+    console.log(`${cyan}┃${reset}  ${green}✨ SERVER AZRIL PERPUS BERHASIL DIJALANKAN ✨${reset}      ${cyan}┃${reset}`);
+    console.log(`${cyan}┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫${reset}`);
+    console.log(`${cyan}┃${reset}  🚀 Port   : ${white}${port}${reset}                                     ${cyan}┃${reset}`);
+    console.log(`${cyan}┃${reset}  🌍 Status : ${green}Online & Active${reset}                          ${cyan}┃${reset}`);
+    console.log(`${cyan}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛${reset}\n`);
 });
